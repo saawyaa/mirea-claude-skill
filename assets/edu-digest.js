@@ -63,12 +63,24 @@ window.__mireaEdu = async () => {
   }
   try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (_) { }
 
+  if (window.__FMT === 'json') return JSON.stringify({
+    kind: 'edu', unread, changes,
+    events: ev.map(e => ({
+      when: fmt(e.timesort), hours: hrs(e.timesort), name: e.name.replace(/ - срок сдачи| закрывается/, ''),
+      course: ((e.course && (e.course.shortname || e.course.fullname)) || '').split('_')[0],
+      status: status[e.id] || '', mod: e.modulename
+    })),
+    notif: notif.filter(n => !n.read).map(n => ({ when: fmt(n.timecreated), subject: (n.subject || '').slice(0, 90) }))
+  });
+
   // Рендер
   const L = [];
+  // «через сколько» читается быстрее даты: до дедлайна человек считает в днях, а не в числах месяца.
+  const left = t => { const h = hrs(t); return h < 24 ? `через ${h} ч` : `через ${Math.round(h / 24)} дн.`; };
   const line = e => {
     const st = status[e.id] ? ' · ' + status[e.id] : '';
     const c = e.course && (e.course.shortname || e.course.fullname) || '';
-    return `  ${fmt(e.timesort)} · ${e.name.replace(/ - срок сдачи| закрывается/, '')} · ${c.split('_')[0]}${st}`;
+    return `  ${fmt(e.timesort)} (${left(e.timesort)}) · ${e.name.replace(/ - срок сдачи| закрывается/, '')} · ${c.split('_')[0]}${st}`;
   };
   const pend = e => !/сдано/.test(status[e.id] || '');
   const urgent = ev.filter(e => hrs(e.timesort) <= 48 && pend(e));

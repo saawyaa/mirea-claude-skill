@@ -1,0 +1,85 @@
+<!-- Шаблон виджета для mcp__visualize__show_widget.
+     Вставлять В КОД ВИДЖЕТА, подставив данные из коллекторов, запущенных с window.__FMT = 'json'.
+     Блоки, для которых нет данных, удалять целиком — пустых секций быть не должно.
+     Цвета только переменными: собственная палитра выбьется из темы чата. -->
+<h2 class="sr-only">ОДНО ПРЕДЛОЖЕНИЕ: что на панели, числами. Для скринридера.</h2>
+<div class="mrw">
+  <section class="mrw-block">
+    <div class="mrw-head"><span class="mrw-title">Дедлайны</span><span class="mrw-sub">горизонт N дней</span></div>
+    <!-- срочное первым; класс mrw-hot только тем, у кого меньше 48 ч -->
+    <div class="mrw-row mrw-hot">
+      <span class="mrw-chip mrw-chip-hot">завтра</span>
+      <span class="mrw-name">НАЗВАНИЕ <span class="mrw-dim">КУРС</span></span>
+      <span class="mrw-meta mrw-warn">не сдано</span>
+    </div>
+  </section>
+
+  <section class="mrw-block">
+    <div class="mrw-head"><span class="mrw-title">БРС</span><span class="mrw-sub">Σ N · полоса до порога, не до потолка</span></div>
+    <div class="mrw-brs" id="mrw-brs"></div>
+  </section>
+
+  <section class="mrw-block mrw-last">
+    <div class="mrw-head"><span class="mrw-title">Посещаемость</span><span class="mrw-sub">N недель</span></div>
+    <div class="mrw-att">
+      <span class="mrw-pill">отмечено <b>N</b></span>
+      <span class="mrw-pill mrw-pill-dim">без отметки <b>N</b></span>
+      <span class="mrw-note">даты и предметы без отметки</span>
+    </div>
+  </section>
+</div>
+
+<style>
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .mrw{font-size:15px;line-height:1.7;color:var(--text-primary)}
+  .mrw-block{padding:14px 0;border-bottom:1px solid var(--border)}
+  .mrw-last{border-bottom:0;padding-bottom:4px}
+  .mrw-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .mrw-title{font-weight:500}
+  .mrw-sub{font-size:13px;color:var(--text-muted)}
+  .mrw-row{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:baseline;padding:5px 0}
+  .mrw-chip{font-size:12px;color:var(--text-muted);border:1px solid var(--border);border-radius:var(--radius);padding:1px 6px;text-align:center}
+  .mrw-chip-hot{color:var(--text-danger);border-color:var(--border-accent)}
+  .mrw-hot .mrw-name{font-weight:500}
+  .mrw-name{min-width:0}
+  .mrw-dim{color:var(--text-muted);font-size:13px}
+  .mrw-meta{font-size:13px;color:var(--text-muted);white-space:nowrap}
+  .mrw-warn{color:var(--text-danger)}
+  .mrw-brs{display:flex;flex-direction:column;gap:6px}
+  .mrw-brs-row{display:grid;grid-template-columns:1fr 96px 108px;gap:10px;align-items:center;font-size:14px}
+  .mrw-brs-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mrw-track{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+  .mrw-fill{height:100%;background:var(--text-accent);border-radius:999px}
+  .mrw-need{font-size:13px;color:var(--text-muted);white-space:nowrap;text-align:right}
+  .mrw-att{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mrw-pill{font-size:13px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius);padding:3px 9px}
+  .mrw-pill b{font-weight:500}
+  .mrw-pill-dim{color:var(--text-muted)}
+  .mrw-note{font-size:13px;color:var(--text-muted)}
+  @media(max-width:520px){
+    .mrw-row{grid-template-columns:56px 1fr}
+    .mrw-row .mrw-meta{grid-column:2}
+    .mrw-brs-row{grid-template-columns:1fr 70px;row-gap:2px}
+    .mrw-need{grid-column:1/-1;text-align:left}
+  }
+</style>
+
+<script>
+  (function () {
+    // СЮДА массив из brs-digest.js с window.__FMT = 'json': {name, got, need, max, target}
+    var data = [];
+    var host = document.getElementById('mrw-brs');
+    if (!host) return;
+    data.forEach(function (d) {
+      var target = d.need != null ? d.got + d.need : d.max;   // меряем до порога
+      var pct = Math.max(2, Math.min(100, d.got / target * 100));
+      var row = document.createElement('div');
+      row.className = 'mrw-brs-row';
+      row.innerHTML =
+        '<span class="mrw-brs-name">' + d.name + '</span>' +
+        '<span class="mrw-track"><span class="mrw-fill" style="width:' + pct.toFixed(1) + '%"></span></span>' +
+        '<span class="mrw-need">' + (d.need != null ? 'ещё ' + d.need + ' до «' + d.target + '»' : d.got + ' из ' + d.max) + '</span>';
+      host.appendChild(row);
+    });
+  })();
+</script>

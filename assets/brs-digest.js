@@ -36,7 +36,15 @@ window.__mireaBrs = async () => {
   const isFirst = !Object.keys(prev).length;
   try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (_) { }
 
+  if (window.__FMT === 'json') return JSON.stringify({ kind: 'brs', items, grew, sum: +items.reduce((a, i) => a + i.got, 0).toFixed(1) });
+
   const pad = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s.padEnd(n));
+  // Полоса даёт то, чего не видно в голых числах: насколько далеко до порога.
+  const bar = (got, max, need) => {
+    const target = need != null ? got + need : max;     // порог, а не потолок: до него и меряем
+    const w = 10, f = Math.max(0, Math.min(w, Math.round(got / target * w)));
+    return '▰'.repeat(f) + '▱'.repeat(w - f);
+  };
   const byNeed = [...items].sort((a, b) => (b.need ?? 0) - (a.need ?? 0));
   const show = window.__BRSALL ? byNeed : byNeed.slice(0, 12);
 
@@ -44,7 +52,7 @@ window.__mireaBrs = async () => {
   for (const i of show) {
     const left = i.need != null ? `до «${i.target || '?'}»: ещё ${i.need}` : 'порог не указан';
     const pv = i.perVisit != null ? ` · посещение +${i.perVisit}` : '';
-    L.push(`  ${pad(i.name, 34)} ${(i.form + (i.part ? ' ' + i.part : '')).padEnd(9)} ${String(i.got).padStart(5)}/${i.max}  ${left}${pv}`);
+    L.push(`  ${pad(i.name, 30)} ${(i.form + (i.part ? ' ' + i.part : '')).padEnd(9)} ${bar(i.got, i.max, i.need)} ${String(i.got).padStart(5)}/${i.max}  ${left}${pv}`);
   }
   const sum = items.reduce((s, i) => s + i.got, 0), cap = items.reduce((s, i) => s + i.max, 0);
   L.push(`Σ ${sum.toFixed(1)} из ${cap}`);

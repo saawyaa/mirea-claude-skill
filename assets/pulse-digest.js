@@ -94,6 +94,8 @@ window.__mireaPulse = async () => {
   // Вернуть календарь туда, где нашли.
   for (let i = 0; i < PASTW; i++) { const a = arrow('right'); if (!a) break; a.click(); await wait(700); }
 
+  if (window.__FMT === 'json') return JSON.stringify({ kind: 'pulse', week: weekTxt, ahead, marked, skipped, missed });
+
   const L = [`ПУЛЬС · ${weekTxt}`.trim(), ...ahead];
   if (marked || skipped) {
     L.push(`📊 Посещаемость (${PASTW + 1} нед.): отмечено ${marked}, без отметки ${skipped}`);
