@@ -27,11 +27,22 @@
 
 ## Установка
 
+**Через плагин — рекомендуется.** Две команды в Claude Code:
+
+```
+/plugin marketplace add saawyaa/mirea-claude-skill
+/plugin install mirea@mirea-claude-skill
+```
+
+Обновления потом приходят через `/plugin`, вручную ничего дёргать не нужно.
+
+**Вручную**, если плагины не используешь:
+
 ```bash
 git clone https://github.com/saawyaa/mirea-claude-skill ~/.claude/skills/mirea
 ```
 
-Настраивать нечего: ни токенов, ни ключей, ни конфигов.
+Настраивать нечего ни в том, ни в другом случае: ни токенов, ни ключей, ни конфигов.
 
 ## Первый запуск
 

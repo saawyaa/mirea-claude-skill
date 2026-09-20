@@ -1,0 +1,23 @@
+{
+  "name": "mirea-claude-skill",
+  "owner": {
+    "name": "saawyaa",
+    "url": "https://github.com/saawyaa"
+  },
+  "metadata": {
+    "description": "Скилл Claude Code для студентов РТУ МИРЭА: СДО, Пульс и БРС в одной сводке.",
+    "version": "1.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mirea",
+      "source": "./",
+      "description": "Дедлайны с реальным статусом сдачи, расписание с аудиториями, посещаемость и баллы БРС. Второй запуск показывает только изменения. Настройки не требуются: ни токенов, ни ключей.",
+      "version": "1.1.0",
+      "author": { "name": "saawyaa", "url": "https://github.com/saawyaa" },
+      "homepage": "https://github.com/saawyaa/mirea-claude-skill",
+      "category": "productivity",
+      "tags": ["mirea", "education", "university", "schedule", "deadlines", "students"]
+    }
+  ]
+}

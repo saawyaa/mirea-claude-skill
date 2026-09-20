@@ -1,0 +1,13 @@
+{
+  "name": "mirea",
+  "version": "1.1.0",
+  "description": "Сводки по учёбе в РТУ МИРЭА: дедлайны СДО с реальными статусами сдачи, расписание, посещаемость и баллы БРС из Пульса — одной командой. Без токенов и конфигов.",
+  "author": {
+    "name": "saawyaa",
+    "url": "https://github.com/saawyaa"
+  },
+  "homepage": "https://github.com/saawyaa/mirea-claude-skill",
+  "repository": "https://github.com/saawyaa/mirea-claude-skill",
+  "license": "MIT",
+  "keywords": ["mirea", "мирэа", "ртумирэа", "сдо", "пульс", "брс", "moodle", "студент", "расписание", "дедлайны", "посещаемость", "учёба"]
+}
