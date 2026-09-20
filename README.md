@@ -1,4 +1,6 @@
-# mirea-claude-skill
+<p align="center">
+  <img src=".github/banner.png" alt="mirea-claude-skill" width="100%">
+</p>
 
 Скилл для [Claude Code](https://claude.com/claude-code): сводки по учёбе в РТУ МИРЭА — дедлайны, статусы сдачи, расписание, посещаемость и баллы БРС из **СДО** и **Пульса** одной командой.
 
