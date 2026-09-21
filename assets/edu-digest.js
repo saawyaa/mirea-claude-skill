@@ -47,19 +47,27 @@ window.__mireaEdu = async () => {
   }));
 
   // Диф с прошлым запуском — живёт в браузере, мне в контекст не попадает.
-  let prev = {};
-  try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { }
-  const cur = {}; ev.forEach(e => cur[e.id] = status[e.id] || e.modulename);
+  // Снимок приходит с диска через window.__PREV: localStorage умирает вместе с панелью,
+  // поэтому между сессиями диф на нём не работал вовсе.
+  let prev = window.__PREV || null;
+  if (!prev) { try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { prev = {}; } }
+  // В снимке храним статус И название: у исчезнувшего события названия взять уже неоткуда,
+  // а строка «пропало · id1337354» человеку бесполезна.
+  const SEP = '⋮', st_ = v => String(v).split(SEP)[0], nm_ = v => String(v).split(SEP)[1] || '';
+  const short = e => e.name.replace(/ - срок сдачи| закрывается/, '').slice(0, 40);
+  const cur = {}; ev.forEach(e => cur[e.id] = (status[e.id] || e.modulename) + SEP + short(e));
   const isFirst = !Object.keys(prev).length;
   const changes = [];
   if (!isFirst) {
     ev.forEach(e => {
-      const was = prev[e.id], is = cur[e.id];
-      if (was === undefined) changes.push(`+ новый срок · ${e.name} · ${fmt(e.timesort)}`);
-      else if (was !== is && /сдано/.test(is) && !/сдано/.test(was)) changes.push(`✓ сдано · ${e.name}`);
-      else if (was !== is && /оценка/.test(is)) changes.push(`★ оценили · ${e.name} · ${is}`);
+      const was = prev[e.id] === undefined ? undefined : st_(prev[e.id]), is = st_(cur[e.id]);
+      if (was === undefined) changes.push(`+ новый срок · ${short(e)} · ${fmt(e.timesort)}`);
+      else if (was !== is && /сдано/.test(is) && !/сдано/.test(was)) changes.push(`✓ сдано · ${short(e)}`);
+      else if (was !== is && /оценка/.test(is)) changes.push(`★ оценили · ${short(e)} · ${is}`);
     });
-    Object.keys(prev).forEach(id => { if (!cur[id]) changes.push(`– пропало из списка (сдано либо закрыто) · id${id}`); });
+    Object.keys(prev).forEach(id => {
+      if (!cur[id]) changes.push(`– сдано либо закрыто · ${nm_(prev[id]) || 'id' + id}`);
+    });
   }
   try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (_) { }
 
@@ -97,6 +105,8 @@ window.__mireaEdu = async () => {
   if (unreadN.length) { L.push('🔔 НЕПРОЧИТАННЫЕ'); unreadN.forEach(n => L.push(`  ${fmt(n.timecreated)} · ${(n.subject || '').slice(0, 80)}`)); }
   if (!urgent.length && !soon.length) L.push('  Открытых дедлайнов в горизонте нет.');
   if (warn.length) L.push('⚠️ не собралось: ' + warn.join('; '));
+  // Хвост забирает вызывающий и кладёт в ~/.local/state/mirea/edu.json. Пользователю не показывать.
+  L.push('⟦SNAP⟧' + JSON.stringify(cur));
   return L.join('\n');
 };
 // Кладём сам скрипт в localStorage: повторный вызов в этой сессии — одной строкой,

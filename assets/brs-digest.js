@@ -29,7 +29,8 @@ window.__mireaBrs = async () => {
   if (!items.length) return 'БРС: карточки не распознались. Страница загрузилась? Подожди ~4 с и повтори.';
 
   // Диф с прошлым запуском живёт в браузере, в контекст не попадает.
-  let prev = {}; try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { }
+  let prev = window.__PREV || null;
+  if (!prev) { try { prev = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) { prev = {}; } }
   const cur = {}; items.forEach(i => cur[i.name] = i.got);
   const grew = Object.keys(cur).filter(k => prev[k] !== undefined && cur[k] > prev[k])
     .map(k => `  ↑ ${k}: ${prev[k]} → ${cur[k]} (+${(cur[k] - prev[k]).toFixed(1)})`);
@@ -59,6 +60,7 @@ window.__mireaBrs = async () => {
   if (grew.length) { L.push('🆕 ПРИБАВИЛОСЬ'); grew.forEach(g => L.push(g)); }
   else if (isFirst) L.push('  (первый запуск — дальше покажу только прирост баллов)');
   L.push('  Пороги и прогноз — расчёт Пульса, не мой.');
+  L.push('⟦SNAP⟧' + JSON.stringify(cur));   // в ~/.local/state/mirea/brs.json, пользователю не показывать
   return L.join('\n');
 };
 try { localStorage.setItem('mirea:src:brs', '(' + window.__mireaBrs + ')'); } catch (_) { }
