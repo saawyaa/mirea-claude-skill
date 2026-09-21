@@ -57,8 +57,10 @@ window.__mireaPulse = async () => {
   const dow = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
   const weekTxt = (document.body.innerText.match(/\d+\s*недел[а-яё]*/) || [''])[0];
 
-  const ahead = [], missed = [];
+  const ahead = [], missed = [], missedBy = {};
   let marked = 0, skipped = 0, scanned = 0;
+  // Ключ для сшивки с БРС: в журнале «Иностранный язык 2 п/г», в БРС просто «Иностранный язык».
+  const norm = s => s.replace(/\s+\d+\s*п\/г.*$/i, '').replace(/\s+\d+\s*\/\s*\d+/, '').trim().toLowerCase();
 
   const scanWeek = async (collectFuture) => {
     const { m, y } = header();
@@ -72,7 +74,11 @@ window.__mireaPulse = async () => {
       const lessons = parseDay(); scanned++;
       if (isPast) {
         for (const l of lessons) {
-          if (l.mark === 'Н') { skipped++; missed.push(`  ${d2(dnum)}.${d2(m + 1)} ${l.time.split('-')[0]} ${l.subject}`); }
+          if (l.mark === 'Н') {
+            skipped++;
+            missed.push(`  ${d2(dnum)}.${d2(m + 1)} ${l.time.split('-')[0]} ${l.subject}`);
+            const k = norm(l.subject); if (k) missedBy[k] = (missedBy[k] || 0) + 1;
+          }
           else if (l.mark) marked++;
         }
         continue;
@@ -94,7 +100,7 @@ window.__mireaPulse = async () => {
   // Вернуть календарь туда, где нашли.
   for (let i = 0; i < PASTW; i++) { const a = arrow('right'); if (!a) break; a.click(); await wait(700); }
 
-  if (window.__FMT === 'json') return JSON.stringify({ kind: 'pulse', week: weekTxt, ahead, marked, skipped, missed });
+  if (window.__FMT === 'json') return JSON.stringify({ kind: 'pulse', week: weekTxt, ahead, marked, skipped, missed, missedBy });
 
   const L = [`ПУЛЬС · ${weekTxt}`.trim(), ...ahead];
   if (marked || skipped) {
@@ -102,6 +108,8 @@ window.__mireaPulse = async () => {
     missed.slice(0, 10).forEach(m => L.push('  Н · ' + m.trim()));
     if (skipped) L.push('  «Н» = нет отметки. Могла не сработать отметка, а не прогул — сверяй, прежде чем паниковать.');
   } else if (scanned) L.push('📊 Отметок посещаемости за просмотренные дни нет.');
+  // Хвост забирает вызывающий и передаёт в brs-digest как window.__MISSED. Пользователю не показывать.
+  if (Object.keys(missedBy).length) L.push('⟦MISSED⟧' + JSON.stringify(missedBy));
   return L.join('\n');
 };
 // Кладём сам скрипт в localStorage: повторный вызов в этой сессии — одной строкой,

@@ -57,6 +57,26 @@ window.__mireaBrs = async () => {
   }
   const sum = items.reduce((s, i) => s + i.got, 0), cap = items.reduce((s, i) => s + i.max, 0);
   L.push(`Σ ${sum.toFixed(1)} из ${cap}`);
+
+  // Цена пропусков: журнал знает, сколько пар пропущено, БРС — сколько стоит одно посещение.
+  // Порознь обе цифры абстрактны, вместе — конкретны.
+  const miss = window.__MISSED;
+  if (miss && Object.keys(miss).length) {
+    const nrm = s => s.replace(/\s+\d+\s*п\/г.*$/i, '').replace(/\s+\d+\s*\/\s*\d+/, '').trim().toLowerCase();
+    const lost = [];
+    for (const i of items) {
+      const n = miss[nrm(i.name)];
+      if (n && i.perVisit) lost.push({ name: i.name, n, pts: +(n * i.perVisit).toFixed(2) });
+    }
+    if (lost.length) {
+      const total = lost.reduce((a, x) => a + x.pts, 0);
+      L.push(`💸 ПРОПУСКИ СТОИЛИ ${total.toFixed(1)} балла`);
+      // «1 пар» выглядит как недоделка и подрывает доверие к остальным цифрам
+      const plural = (n, a, b, c) => { const m = n % 100, k = n % 10; return n + ' ' + (m > 4 && m < 21 ? c : k === 1 ? a : k > 1 && k < 5 ? b : c); };
+      lost.sort((a, b) => b.pts - a.pts).forEach(x => L.push(`  ${x.name} · ${plural(x.n, 'пара', 'пары', 'пар')} · −${x.pts}`));
+      L.push('  Отметку могли не поставить — проверь, прежде чем считать это потерей.');
+    }
+  }
   if (grew.length) { L.push('🆕 ПРИБАВИЛОСЬ'); grew.forEach(g => L.push(g)); }
   else if (isFirst) L.push('  (первый запуск — дальше покажу только прирост баллов)');
   L.push('  Пороги и прогноз — расчёт Пульса, не мой.');
