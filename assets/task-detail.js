@@ -29,14 +29,17 @@ window.__mireaTask = async () => {
     hits.slice(0, 8).map(e => '  · ' + e.name).join('\n');
 
   const d2 = n => String(n).padStart(2, '0');
-  const fmt = t => { const x = new Date(t * 1000); return `${d2(x.getDate())}.${d2(x.getMonth() + 1)} ${d2(x.getHours())}:${d2(x.getMinutes())}`; };
+  // Сроки выставлены университетом по Москве, а ноутбук студента может стоять в любом поясе.
+  // Считаем и показываем по Москве, иначе человек вне МСК увидит сдвинутое время и не поймёт почему.
+  const MSKF = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const fmt = t => MSKF.format(new Date(t * 1000)).replace(',', '');
   const out = [];
 
   for (const e of hits) {
     const url = e.url || e.viewurl || ((e.action && e.action.url) || '').split('&action=')[0];
     out.push(`▸ ${e.name.replace(/ - срок сдачи| закрывается/, '')}`);
     out.push(`  курс: ${((e.course && (e.course.shortname || e.course.fullname)) || '').split('_')[0]}`);
-    out.push(`  срок: ${fmt(e.timesort)}${e.overdue ? '  ПРОСРОЧЕНО' : ''}`);
+    out.push(`  срок: ${fmt(e.timesort)} МСК${e.overdue ? '  ПРОСРОЧЕНО' : ''}`);
     if (!url) { out.push('  ссылка не найдена'); continue; }
 
     let doc;
@@ -45,10 +48,10 @@ window.__mireaTask = async () => {
 
     const rows = [...doc.querySelectorAll('table tr')].map(tr =>
       [...tr.querySelectorAll('th,td')].map(c => c.textContent.replace(/\s+/g, ' ').trim()).join(': '));
-    const st = rows.find(t => /^Состояние ответа/.test(t)) || '';
-    if (st) out.push('  статус: ' + st.replace('Состояние ответа на задание: ', ''));
-    const gr = rows.find(t => /^Оценка:/.test(t));
-    if (gr && !/^Оценка: *-?$/.test(gr)) out.push('  ' + gr.toLowerCase());
+    const st = rows.find(t => /^(Состояние ответа|Submission status)/.test(t)) || '';
+    if (st) out.push('  статус: ' + st.replace(/^(Состояние ответа на задание|Submission status): /, ''));
+    const gr = rows.find(t => /^(Оценка|Grade):/.test(t));
+    if (gr && !/^(Оценка|Grade): *-?$/.test(gr)) out.push('  ' + gr.toLowerCase());
 
     // Условие: берём блок описания, режем — в чат не нужен весь текст методички.
     const introEl = doc.querySelector('.activity-description, #intro, [id^="intro"]');

@@ -13,7 +13,9 @@ window.__mireaBrs = async () => {
       const o = { form: '', part: '', name: '', got: null, max: null, target: '', perVisit: null, need: null };
       for (const x of L) {
         let m;
-        if (!o.form && /^(ЗАЧ|ЭКЗ|ДИФЗАЧ|КР|КП)$/.test(x)) o.form = x;
+        // Формы контроля не перечисляем: бывают ДИФЗАЧ, КП, КР и что угодно ещё.
+        // «БРС» исключаем явно — это подпись блока, а не форма, и стоит в карточке рядом.
+        if (!o.form && x !== 'БРС' && /^[А-ЯЁ]{2,8}$/.test(x)) o.form = x;
         else if (!o.part && /^\d+\s*\/\s*\d+$/.test(x)) o.part = x.replace(/\s/g, '');
         else if ((m = x.match(/^([\d.,]+)\s+из\s+([\d.,]+)$/))) { o.got = num(m[1]); o.max = num(m[2]); }
         else if ((m = x.match(/^\+([\d.,]+)/))) { o.perVisit = num(m[1]); const n = x.match(/ещё\s+([\d.,]+)/); if (n) o.need = num(n[1]); }

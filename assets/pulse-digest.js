@@ -28,7 +28,8 @@ window.__mireaPulse = async () => {
   };
 
   const RE = {
-    type: /^(ЛК|ПР|ЛАБ|СР|КР|ЗАЧ|ЭКЗ)$/, mark: /^(Н|\+|＋)$/, pair: /^\d+ пара$/,
+    // Не белый список: у других институтов встречаются КСР, ЛАБ, СРС и прочие сокращения.
+    type: /^[А-ЯЁ]{2,4}$/, mark: /^(Н|\+|＋)$/, pair: /^\d+ пара$/,
     time: /^\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}$/, room: /^[А-ЯЁA-Z]{1,4}-[\dА-ЯЁ]/,
     teacher: /^[А-ЯЁ][а-яё-]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\./
   };
@@ -52,8 +53,11 @@ window.__mireaPulse = async () => {
     });
   };
 
-  const now = new Date(), d2 = n => String(n).padStart(2, '0');
-  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d2 = n => String(n).padStart(2, '0');
+  // Какой сегодня день — по Москве, а не по часам ноутбука: под вечер разница даёт сдвиг на сутки.
+  const mskToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(new Date()).split('-').map(Number);
+  const midnight = new Date(mskToday[0], mskToday[1] - 1, mskToday[2]);
   const dow = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
   const weekTxt = (document.body.innerText.match(/\d+\s*недел[а-яё]*/) || [''])[0];
 

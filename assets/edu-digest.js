@@ -14,7 +14,10 @@ window.__mireaEdu = async () => {
     return j[0].data;
   };
   const d2 = n => String(n).padStart(2, '0');
-  const fmt = t => { const x = new Date(t * 1000); return `${d2(x.getDate())}.${d2(x.getMonth() + 1)} ${d2(x.getHours())}:${d2(x.getMinutes())}`; };
+  // Сроки выставлены университетом по Москве, а ноутбук студента может стоять в любом поясе.
+  // Считаем и показываем по Москве, иначе человек вне МСК увидит сдвинутое время и не поймёт почему.
+  const MSKF = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const fmt = t => MSKF.format(new Date(t * 1000)).replace(',', '');
   const hrs = t => Math.round((t - now) / 3600);
 
   let ev = [], notif = [], unread = 0, warn = [];
@@ -38,11 +41,13 @@ window.__mireaEdu = async () => {
       const doc = new DOMParser().parseFromString(await (await fetch(url)).text(), 'text/html');
       const rows = [...doc.querySelectorAll('table tr')].map(tr =>
         [...tr.querySelectorAll('th,td')].map(c => c.textContent.replace(/\s+/g, ' ').trim()).join(': '));
-      const st = rows.find(t => /^Состояние ответа/.test(t)) || '';
-      const gr = rows.find(t => /^Оценка:/.test(t)) || '';
-      status[e.id] = /Отправлено для оценивания/.test(st) ? 'сдано'
-        : /еще не представлены|не представлен/i.test(st) ? 'НЕ СДАНО' : '?';
-      if (/Отправлено/.test(st) && gr && !/^Оценка: *-?$/.test(gr)) status[e.id] += ' · ' + gr.replace('Оценка: ', 'оценка ');
+      // У части студентов интерфейс Moodle английский — без этих альтернатив статус станет «?».
+      const st = rows.find(t => /^(Состояние ответа|Submission status)/.test(t)) || '';
+      const gr = rows.find(t => /^(Оценка|Grade):/.test(t)) || '';
+      status[e.id] = /Отправлено для оценивания|Submitted for grading/.test(st) ? 'сдано'
+        : /еще не представлены|не представлен|No submissions have been made|No attempt/i.test(st) ? 'НЕ СДАНО' : '?';
+      if (/Отправлено|Submitted/.test(st) && gr && !/^(Оценка|Grade): *-?$/.test(gr))
+        status[e.id] += ' · ' + gr.replace(/^(Оценка|Grade): /, 'оценка ');
     } catch (_) { status[e.id] = '?'; }
   }));
 
